@@ -1,6 +1,6 @@
 # Flow-GRPO
 
-Last updated: 05/13/2026.
+Last updated: 06/02/2026.
 
 Flow-GRPO ([paper](https://arxiv.org/abs/2505.05470), [code](https://github.com/yifan123/flow_grpo)) is the first method to integrate online policy gradient reinforcement learning into **flow matching** generative models (e.g., Stable Diffusion 3, FLUX). It enables direct reward optimization for tasks such as compositional text-to-image generation, visual text rendering, and human preference alignment, without modifying the standard inference pipeline.
 
@@ -298,6 +298,27 @@ A ready-to-use 4-GPU SP=2 example is provided:
 ```bash
 bash examples/flowgrpo_trainer/run_qwen_image_ocr_lora_sp2.sh
 ```
+
+
+## Image editing (Qwen-Image-Edit-Plus)
+
+FlowGRPO also supports image-to-image editing models. The
+`Qwen-Image-Edit-Plus` adapter (architecture string
+`"QwenImageEditPlusPipeline"`, matching the upstream HuggingFace
+[`Qwen/Qwen-Image-Edit-2511`](https://huggingface.co/Qwen/Qwen-Image-Edit-2511)
+checkpoint) extends the FlowGRPO loop with:
+
+- Condition image latents concatenated with the noise latents before the
+  transformer forward, so each denoising step sees the source image.
+- Norm-preserving (rescaled) CFG with a 1e-6 floor on the denominator —
+  guards against bf16 zero-norm tokens collapsing log-prob to NaN under
+  tiny-random / few-step setups.
+
+The adapter lives in
+[`verl_omni/pipelines/qwen_image_edit_flow_grpo/`](../../verl_omni/pipelines/qwen_image_edit_flow_grpo/__init__.py).
+For a complete walkthrough including dataset download and launch
+commands see the
+[FlowGRPO trainer README — "Qwen-Image-Edit-Plus on ShareGPT-4o-Image-Mini" section](../../examples/flowgrpo_trainer/README.md#qwen-image-edit-plus-on-sharegpt-4o-image-mini).
 
 
 ## Citation

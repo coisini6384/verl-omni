@@ -84,6 +84,74 @@ Override these values on the command line if you want to log under a different p
 
 See the [Metrics Documentation](../../docs/start/metrics.md) for a full description of all diffusion-specific training metrics.
 
+## Qwen-Image-Edit-Plus on ShareGPT-4o-Image-Mini
+
+Train the image-editing variant `Qwen-Image-Edit-Plus` on a real edit-instruction dataset using FlowGRPO + jpeg_compressibility (no external reward model required).
+
+### Pipeline registration
+
+The Edit-Plus adapter is registered under architecture `"QwenImageEditPlusPipeline"` (matching `model_index.json::_class_name` of the upstream HuggingFace `Qwen/Qwen-Image-Edit-2511` repository, whose pipeline class is `QwenImageEditPlusPipeline`). The registry key is auto-resolved from the model checkpoint at runtime — no extra CLI override is needed.
+
+### Prepare the dataset
+
+The dataset [`coisini6384/ShareGPT-4o-Image-Mini`](https://huggingface.co/datasets/coisini6384/ShareGPT-4o-Image-Mini) ships three files: `train.jsonl`, `test.jsonl`, and `images.tar.gz`. Each JSONL line has the schema `{"prompt": "<edit instruction>", "image": "<filename>"}`.
+
+Download and unpack with the bundled helper (defaults to `${WORKSPACE:-$HOME}/data/sharegpt4o_image_mini/`):
+
+```bash
+bash examples/flowgrpo_trainer/data_process/download_sharegpt4o_image_mini.sh
+```
+
+After it finishes the directory layout looks like:
+
+```
+$WORKSPACE/data/sharegpt4o_image_mini/
+├── train.jsonl
+├── test.jsonl
+├── images.tar.gz                # original archive (kept for reproducibility)
+└── images/                      # extracted; referenced by *.jsonl entries
+    ├── v2v_3165.png
+    └── ...
+```
+
+Then convert it to the parquet format expected by the FlowGRPO data loader:
+
+```bash
+python3 examples/flowgrpo_trainer/data_process/qwenimageedit_sharegpt4o.py \
+  --input_dir  $WORKSPACE/data/sharegpt4o_image_mini \
+  --output_dir $WORKSPACE/data/sharegpt4o_image_mini_qwen_image_edit
+```
+
+This produces:
+
+- `$WORKSPACE/data/sharegpt4o_image_mini_qwen_image_edit/train.parquet`
+- `$WORKSPACE/data/sharegpt4o_image_mini_qwen_image_edit/test.parquet`
+
+> **Bring your own dataset.** Any dataset that follows the same `(train.jsonl, test.jsonl, images/)` layout and JSONL schema (`prompt` + `image`) works with the same preprocessor — point `--input_dir` at it.
+
+### Prepare the model
+
+The launch script uses the HuggingFace Hub ID `Qwen/Qwen-Image-Edit-2511` directly — no manual download is required. To pin a local copy, edit `model_name` in the script.
+
+### Run training
+
+Two example scripts are provided:
+
+```bash
+# Generic Edit-Plus LoRA recipe (BYO dataset).
+bash examples/flowgrpo_trainer/run_qwen_image_edit_lora.sh
+
+# ShareGPT-4o-Image-Mini-tuned LoRA recipe.
+bash examples/flowgrpo_trainer/run_qwen_image_edit_sharegpt4o_image_mini_lora.sh
+```
+
+Both scripts run `python3 -m verl_omni.trainer.main_diffusion` with:
+
+- `algorithm.adv_estimator=flow_grpo`
+- `actor_rollout_ref.model.path=Qwen/Qwen-Image-Edit-2511`
+- `actor_rollout_ref.rollout.name=vllm_omni`
+- `reward.reward_function=jpeg_compressibility` (no external reward model)
+
 ## Variants
 
 For reward models that are expensive to evaluate (e.g., a VLM judge), the reward model can be allocated its own dedicated GPU resource pool and run asynchronously alongside the policy. This avoids blocking policy training on reward computation.
