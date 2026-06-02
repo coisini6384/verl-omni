@@ -30,7 +30,10 @@ from verl.utils import tensordict_utils as tu
 from verl.utils.device import get_device_name
 
 from verl_omni.pipelines.model_base import DiffusionModelBase
-from verl_omni.pipelines.qwen_image_flow_grpo.common import QWEN_IMAGE_VAE_SCALE_FACTOR, build_img_shapes
+from verl_omni.pipelines.qwen_image_flow_grpo.common import (
+    QWEN_IMAGE_VAE_SCALE_FACTOR,
+    build_img_shapes,
+)
 from verl_omni.pipelines.schedulers import FlowMatchSDEDiscreteScheduler
 from verl_omni.workers.config import DiffusionModelConfig
 

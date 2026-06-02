@@ -111,7 +111,9 @@ async def _chat_complete(router_address: str, chat_complete_request: dict) -> Ch
             )
             await asyncio.sleep(backoff)
 
-    raise _RewardServerError(f"reward server failed after {_MAX_ATTEMPTS} attempts: {last_err}")
+    raise _RewardServerError(
+        f"reward server failed after {_MAX_ATTEMPTS} attempts: {last_err}"
+    )
 
 
 def _to_pil(image) -> Image.Image:
@@ -229,7 +231,9 @@ async def compute_score_image_edit(
         **DEFAULT_SAMPLING_PARAMS,
     }
     try:
-        result = await _chat_complete(router_address=reward_router_address, chat_complete_request=chat_complete_request)
+        result = await _chat_complete(
+            router_address=reward_router_address, chat_complete_request=chat_complete_request
+        )
     except _RewardServerError as e:
         # Soft-fail: a single bad GRM call should not crash a multi-hour
         # training run. Returning the floor score lets GRPO advantage
