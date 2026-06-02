@@ -244,6 +244,11 @@ run_selected_test 5 "SD3.5 offline DPO trainer e2e" \
     env CUDA_VISIBLE_DEVICES=0 NUM_GPUS=1 \
     bash tests/special_e2e/run_sd35_offline_dpo.sh
 
+# ── Test 6: FlowGRPO Qwen-Image-Edit-Plus e2e (vllm_omni rollout) ────────────
+run_selected_test 6 "FlowGRPO Qwen-Image-Edit-Plus e2e" \
+    env CUDA_VISIBLE_DEVICES="${CUDA_DEVICE_LIST}" NUM_GPUS="${NUM_GPUS}" \
+    bash tests/special_e2e/run_flowgrpo_qwen_image_edit.sh
+
 # ══════════════════════════════════════════════════════════════════════════════
 # SUMMARY
 # ══════════════════════════════════════════════════════════════════════════════
